@@ -1,7 +1,7 @@
 {
-  "name": "Sightread",
-  "short_name": "sightread",
-  "description": "app for learning piano",
+  "name": "Loophesia",
+  "short_name": "loophesia",
+  "description": "app for learning keyboard",
   "start_url": "/",
   "display": "standalone",
   "icons": [
