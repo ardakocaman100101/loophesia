@@ -10,38 +10,34 @@ export default function Home() {
     <>
       <div className="relative flex min-h-[800px] w-full flex-col text-white">
         <div className="bg-purple-primary flex flex-col items-center p-8 text-center pt-24">
-          <h1 className="text-responsive-xxl font-bold">Your Piano Journey Begins Here</h1>
+          <h1 className="text-responsive-xxl font-bold">loophesia for MIDI Keyboards</h1>
           <Sizer height={8} />
-          <h3 className="text-responsive-xl">
-            Plug in your keyboard and learn, right in your browser
+          <h3 className="text-responsive-xl hidden sm:block">
+            Open Source MIDI Keyboard Practice App
           </h3>
-          <Sizer height={overlappingHeight} />
-        </div>
-        <FeaturedSongsPreview marginTop={-overlappingHeight} />
-        <div className="bg-background mt-auto flex min-h-[200px] flex-col items-center gap-6 pt-[42px] pb-[42px]">
-          <h3 className="text-black dark:text-white" style={{ fontSize: 'clamp(1rem, 1rem + 1vw, 2rem)' }}>
-            Start learning
-          </h3>
+          <Sizer height={32} />
           <div
             className="grid w-full justify-center gap-4"
-            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min-content, 150px))' }}
+            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min-content, 180px))' }}
           >
+            <UploadMidi
+              onUpload={(id) => navigate(`/play?id=${id}&source=upload`)}
+              className="flex items-center justify-center rounded-[15px] border border-white/30 bg-white/20 px-4 py-2 font-bold text-white backdrop-blur-sm transition hover:bg-white/30"
+            />
             <Link to={'/songs'}>
-              <Button className="bg-purple-primary hover:bg-purple-hover text-white">
+              <Button className="border border-white/30 bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm">
                 Learn a song
               </Button>
             </Link>
             <Link to={'/freeplay'}>
-              <Button className="border-purple-primary text-purple-primary hover:bg-purple-light border bg-white">
+              <Button className="border border-white/30 bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm">
                 Free play
               </Button>
             </Link>
-            <UploadMidi
-              onUpload={(id) => navigate(`/play?id=${id}&source=upload`)}
-              className="border-purple-primary text-purple-primary hover:bg-purple-light flex items-center justify-center rounded-md border bg-white px-4 py-2"
-            />
           </div>
+          <Sizer height={overlappingHeight} />
         </div>
+        <FeaturedSongsPreview marginTop={-overlappingHeight} />
         <Sizer height={16} />
       </div>
     </>

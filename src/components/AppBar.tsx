@@ -1,14 +1,7 @@
-import { Github, Logo, Menu } from '@/icons'
+import { Github, Logo } from '@/icons'
 import clsx from 'clsx'
-import { PropsWithChildren, useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router'
-import { Dropdown } from './Dropdown'
-
-type NavItem = { route: string; label: string }
-const navItems: NavItem[] = [
-  { route: '/songs', label: 'Learn' },
-  { route: '/freeplay', label: 'Free Play' },
-]
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router'
 
 export default function AppBar() {
   const [scrolled, setScrolled] = useState(false)
@@ -41,11 +34,6 @@ export default function AppBar() {
 
         {/* Desktop Nav */}
         <div className="hidden items-center gap-8 md:flex">
-          {navItems.map((nav) => (
-            <NavLink to={nav.route} key={nav.label}>
-              {nav.label}
-            </NavLink>
-          ))}
           <a
             href="https://github.com/ardakocaman100101/loophesia"
             target="_blank"
@@ -55,51 +43,7 @@ export default function AppBar() {
             <Github size={20} />
           </a>
         </div>
-
-        {/* Mobile Nav */}
-        <div className="md:hidden">
-          <SmallWindowNav />
-        </div>
       </div>
     </nav>
-  )
-}
-
-function SmallWindowNav() {
-  return (
-    <Dropdown
-      target={<Menu height={24} width={24} className="block text-gray-900 dark:text-white" />}
-    >
-      <div className="flex flex-col bg-white/90 p-2 backdrop-blur-xl dark:bg-black/90">
-        {navItems.map((nav, i) => (
-          <Link
-            key={i}
-            to={nav.route}
-            className="text-gray-900 hover:bg-gray-100 block rounded-md px-4 py-3 text-lg font-medium transition dark:text-white dark:hover:bg-gray-800"
-          >
-            {nav.label}
-          </Link>
-        ))}
-      </div>
-    </Dropdown>
-  )
-}
-
-function NavLink({ to, children }: PropsWithChildren<{ to: string }>) {
-  const currentRoute = useLocation().pathname
-  const isActive = currentRoute === to
-
-  return (
-    <Link
-      to={to}
-      className={clsx(
-        'text-sm font-medium transition-colors',
-        isActive
-          ? 'text-purple-600 dark:text-purple-400'
-          : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white',
-      )}
-    >
-      {children}
-    </Link>
   )
 }
