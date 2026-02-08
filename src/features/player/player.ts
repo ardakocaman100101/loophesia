@@ -125,6 +125,10 @@ export class Player {
     }
 
     const midiNote = midiEvent.note
+    if (midiNote === undefined) {
+      return
+    }
+
     if (midiEvent.type === 'up') {
       this.midiPressedNotes.delete(midiNote)
       return

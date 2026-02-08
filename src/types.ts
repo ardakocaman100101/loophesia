@@ -107,10 +107,12 @@ export type TrackSetting = {
 }
 
 export type MidiStateEvent = {
-  type: 'down' | 'up'
-  note: number
+  type: 'down' | 'up' | 'cc'
+  note?: number
   time: number
   velocity?: number
+  cc?: number
+  value?: number
 }
 
 export type HandSettings = {

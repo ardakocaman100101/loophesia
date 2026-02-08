@@ -88,9 +88,11 @@ async function setupMidiDeviceListeners() {
 }
 
 export type MidiEvent = {
-  type: 'on' | 'off'
-  velocity: number
-  note: number
+  type: 'on' | 'off' | 'cc'
+  velocity?: number
+  note?: number
+  cc?: number
+  value?: number
   timeStamp: number
 }
 
@@ -100,21 +102,30 @@ function parseMidiMessage(event: MIDIMessageEvent): MidiEvent | null {
     return null
   }
 
-  let status = data[0]
-  let command = status >>> 4
+  const status = data[0]
+  const command = status >>> 4
+  const channel = status & 0x0f
 
-  // 0x8 = Note Off, 0x9 = Note On, 0xA = Polyphonic Aftertouch
-  // Only process note on/off messages, ignore aftertouch and other messages
-  if (command !== 0x8 && command !== 0x9) {
-    return null
+  // 0x8 = Note Off, 0x9 = Note On, 0xB = Control Change
+  if (command === 0x8 || command === 0x9) {
+    return {
+      type: command === 0x9 ? 'on' : 'off',
+      note: data[1],
+      velocity: data[2],
+      timeStamp: event.timeStamp,
+    }
   }
 
-  return {
-    type: command === 0x9 ? 'on' : 'off',
-    note: data[1],
-    velocity: data[2],
-    timeStamp: event.timeStamp,
+  if (command === 0xb) {
+    return {
+      type: 'cc',
+      cc: data[1],
+      value: data[2],
+      timeStamp: event.timeStamp,
+    }
   }
+
+  return null
 }
 
 function getKeyConfig() {
@@ -262,11 +273,18 @@ function onMidiMessage(e: MIDIMessageEvent) {
     return
   }
 
-  const { note, velocity } = msg
-  if (msg.type === 'on' && msg.velocity > 0) {
-    midiState.press(note, velocity)
-  } else {
-    midiState.release(note)
+  const { note, velocity, cc, value, type, timeStamp } = msg
+  if (type === 'on' && velocity! > 0) {
+    midiState.press(note!, velocity!)
+  } else if (type === 'off' || (type === 'on' && velocity === 0)) {
+    midiState.release(note!)
+  } else if (type === 'cc') {
+    midiState.notify({
+      type: 'cc',
+      cc,
+      value,
+      time: Date.now(),
+    })
   }
 }
 
@@ -278,20 +296,20 @@ function midiEventsToMidi(events: MidiEvent[]) {
   const openNotes = new Map<number, MidiEvent>()
   for (const event of events) {
     if (event.type === 'on') {
-      openNotes.set(event.note, event)
-    } else {
-      const start = openNotes.get(event.note)
+      openNotes.set(event.note!, event)
+    } else if (event.type === 'off') {
+      const start = openNotes.get(event.note!)
       if (!start) {
         continue
       }
-      openNotes.delete(event.note)
+      openNotes.delete(event.note!)
       const end = event
       track.addNote({
-        midi: start.note,
+        midi: start.note!,
         time: start.timeStamp / 1000,
         duration: (end.timeStamp - start.timeStamp) / 1000,
-        velocity: start.velocity,
-        noteOffVelocity: end.velocity,
+        velocity: start.velocity!,
+        noteOffVelocity: end.velocity!,
       })
     }
   }

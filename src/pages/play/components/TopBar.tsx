@@ -1,10 +1,49 @@
 import { Tooltip } from '@/components'
 import { VolumeSliderButton } from '@/features/controls'
-import { ArrowLeft, BarChart2, Midi, Settings, SkipBack } from '@/icons'
+import { Midi } from '@/icons'
 import { isMobile } from '@/utils'
 import clsx from 'clsx'
-import React, { MouseEvent, PropsWithChildren } from 'react'
+import {
+  ArrowLeft,
+  BarChart2,
+  LucideProps,
+  Settings,
+  SkipBack,
+  Timer,
+} from 'lucide-react'
+import { MouseEvent, PropsWithChildren } from 'react'
+import { Link } from 'react-router'
 import StatusIcon from './StatusIcon'
+
+type ButtonProps = PropsWithChildren<{
+  tooltip: string
+  isActive?: boolean
+  onClick?: (e: MouseEvent<any>) => void
+  className?: string
+}>
+
+export function ButtonWithTooltip({
+  tooltip,
+  children,
+  isActive,
+  onClick,
+  className,
+}: ButtonProps) {
+  return (
+    <Tooltip label={tooltip}>
+      <button
+        className={clsx(
+          'group flex items-center justify-center rounded-md p-2 transition hover:bg-white/10 active:bg-white/20',
+          isActive ? 'text-purple-primary' : 'text-white',
+          className,
+        )}
+        onClick={onClick}
+      >
+        {children}
+      </button>
+    </Tooltip>
+  )
+}
 
 type TopBarProps = {
   isLoading: boolean
@@ -18,6 +57,8 @@ type TopBarProps = {
   onClickStats: (e: MouseEvent<any>) => void
   settingsOpen: boolean
   statsVisible: boolean
+  isWaiting: boolean
+  onToggleWaiting: () => void
 }
 
 export default function TopBar({
@@ -32,6 +73,8 @@ export default function TopBar({
   onClickMidi,
   onClickStats,
   statsVisible,
+  isWaiting,
+  onToggleWaiting,
 }: TopBarProps) {
   return (
     <div className="align-center relative z-10 flex h-[50px] min-h-[50px] w-screen justify-center gap-8 bg-[#292929] px-1">
@@ -48,6 +91,14 @@ export default function TopBar({
           <SkipBack size={24} onClick={onClickRestart} />
         </ButtonWithTooltip>
         <StatusIcon isPlaying={isPlaying} isLoading={isLoading} onTogglePlaying={onTogglePlaying} />
+        <ButtonWithTooltip tooltip="Wait Mode" isActive={isWaiting} onClick={onToggleWaiting}>
+          <div className="relative">
+            <Midi size={20} />
+            {isWaiting && (
+              <div className="bg-purple-primary absolute -right-1 -bottom-1 h-2 w-2 rounded-full" />
+            )}
+          </div>
+        </ButtonWithTooltip>
       </div>
       <div className="hidden h-full items-center text-white sm:ml-auto sm:flex">{title}</div>
       <div className="mr-[20px] flex h-full items-center gap-8">
@@ -72,33 +123,3 @@ export default function TopBar({
   )
 }
 
-type ButtonProps = React.DetailedHTMLProps<
-  React.ButtonHTMLAttributes<HTMLButtonElement>,
-  HTMLButtonElement
->
-type ButtonWithTooltipProps = PropsWithChildren<
-  ButtonProps & { tooltip: string; isActive?: boolean }
->
-
-export function ButtonWithTooltip({
-  tooltip,
-  children,
-  isActive,
-  className,
-  ...rest
-}: ButtonWithTooltipProps) {
-  return (
-    <Tooltip label={tooltip}>
-      <button
-        {...rest}
-        className={clsx(
-          className,
-          isActive ? 'fill-purple-primary text-purple-primary' : 'fill-white text-white',
-          'hover:fill-purple-hover hover:text-purple-hover',
-        )}
-      >
-        {children}
-      </button>
-    </Tooltip>
-  )
-}

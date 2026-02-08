@@ -20,7 +20,7 @@ import { useAtomValue } from 'jotai'
 import { AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { SettingsPanel, TopBar } from './components'
+import { SettingsPanel, TopBar, TrackHUD } from './components'
 import { MidiModal } from './components/MidiModal'
 import { StatsPopup } from './components/StatsPopup'
 
@@ -147,6 +147,13 @@ export default function PlaySongPage() {
     }
   }, [waiting, left, right, player])
 
+  useEffect(() => {
+    if (!song) return
+    Object.entries(songConfig.tracks).forEach(([id, settings]) => {
+      player.setTrackVolume(Number(id), settings.sound ? 1 : 0)
+    })
+  }, [songConfig.tracks, player, song])
+
   useOnUnmount(() => player.stop())
 
   useEffect(() => {
@@ -172,20 +179,77 @@ export default function PlaySongPage() {
     }
   })
 
+  const handleToggleMute = React.useCallback(
+    (trackId: number) => {
+      setSongConfig((prev) => {
+        const current = prev.tracks[trackId]
+        return {
+          ...prev,
+          tracks: {
+            ...prev.tracks,
+            [trackId]: { ...current, sound: !current.sound },
+          },
+        }
+      })
+    },
+    [setSongConfig],
+  )
+
+  const handleSolo = React.useCallback(
+    (trackId: number) => {
+      setSongConfig((prev) => {
+        const newTracks = { ...prev.tracks }
+        Object.keys(newTracks).forEach((id) => {
+          const numericId = Number(id)
+          newTracks[numericId] = {
+            ...newTracks[numericId],
+            sound: numericId === trackId,
+          }
+        })
+        return { ...prev, tracks: newTracks }
+      })
+    },
+    [setSongConfig],
+  )
+
+  useOnUnmount(() => player.stop())
+
   useEffect(() => {
-    const handleMidiEvent = ({ type, note, velocity }: MidiStateEvent) => {
-      if (type === 'down') {
-        synth.playNote(note, velocity)
-      } else {
+    const handleMidiEvent = ({ type, note, velocity, cc, value }: MidiStateEvent) => {
+      if (type === 'down' && note !== undefined) {
+        synth.playNote(note, velocity!)
+      } else if (type === 'up' && note !== undefined) {
         synth.stopNote(note, velocity)
+      } else if (type === 'cc') {
+        // Knob 1 (CC 74): Volume
+        if (cc === 74) {
+          player.setVolume(value! / 127)
+        }
+        // Transport: Stop (CC 113) / Play (CC 115)
+        if (cc === 115 && value! > 0) {
+          player.toggle()
+        }
+        if (cc === 113 && value! > 0) {
+          player.restart()
+        }
+        // Custom: Pad 1-8 (mapped to CC 20-27) -> Mute Tracks
+        if (cc! >= 20 && cc! <= 27 && value! > 0) {
+          const trackIds = Object.keys(songConfig.tracks)
+          const targetId = Number(trackIds[cc! - 20])
+          if (!isNaN(targetId)) {
+            handleToggleMute(targetId)
+          }
+        }
+        // Custom: CC 28 -> Toggle Wait
+        if (cc === 28 && value! > 0) {
+          setSongConfig((prev) => ({ ...prev, waiting: !prev.waiting }))
+        }
       }
     }
 
     midiState.subscribe(handleMidiEvent)
-    return function cleanup() {
-      midiState.unsubscribe(handleMidiEvent)
-    }
-  }, [synth, song, songConfig])
+    return () => midiState.unsubscribe(handleMidiEvent)
+  }, [synth, player, handleToggleMute, songConfig.tracks, setSongConfig])
 
   const handleLoopingToggle = (enable: boolean) => {
     if (!enable) {
@@ -265,6 +329,8 @@ export default function PlaySongPage() {
               onClickStats={(e) => {
                 setStatsVisible(!statsVisible)
               }}
+              onToggleWaiting={() => setSongConfig({ ...songConfig, waiting: !waiting })}
+              isWaiting={waiting}
               settingsOpen={settingsOpen}
               statsVisible={statsVisible}
             />
@@ -277,6 +343,14 @@ export default function PlaySongPage() {
                 song={song}
                 onLoopToggled={handleLoopingToggle}
                 isLooping={isLooping}
+              />
+            )}
+            {song && (
+              <TrackHUD
+                song={song}
+                config={songConfig}
+                onToggleMute={handleToggleMute}
+                onSolo={handleSolo}
               />
             )}
             <div className="relative min-w-full">

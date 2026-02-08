@@ -20,7 +20,9 @@ export default function FreePlay() {
 
   const handleNoteDown = useCallback(
     (note: number, velocity: number = 80) => {
-      synthState.synth.playNote(note, velocity)
+      if (note !== undefined) {
+        synthState.synth.playNote(note, velocity)
+      }
       freePlayer.addNote(note, velocity)
     },
     [freePlayer, synthState.synth],
@@ -28,7 +30,9 @@ export default function FreePlay() {
 
   const handleNoteUp = useCallback(
     (note: number) => {
-      synthState.synth.stopNote(note)
+      if (note !== undefined) {
+        synthState.synth.stopNote(note)
+      }
       freePlayer.releaseNote(note)
     },
     [freePlayer, synthState.synth],
@@ -37,9 +41,13 @@ export default function FreePlay() {
   useEffect(() => {
     const handleMidiStateEvent = (e: MidiStateEvent) => {
       if (e.type === 'up') {
-        handleNoteUp(e.note)
-      } else {
-        handleNoteDown(e.note, e.velocity)
+        if (e.note !== undefined) {
+          handleNoteUp(e.note)
+        }
+      } else if (e.type === 'down') {
+        if (e.note !== undefined) {
+          handleNoteDown(e.note, e.velocity)
+        }
       }
     }
     midiState.subscribe(handleMidiStateEvent)

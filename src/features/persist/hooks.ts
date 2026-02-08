@@ -2,12 +2,18 @@ import { isBrowser } from '@/utils'
 import { useCallback, useEffect, useState } from 'react'
 import Storage from './storage'
 
-export function usePersistedState<T>(key: string, init: T): [T, (state: T) => void] {
+export function usePersistedState<T>(
+  key: string,
+  init: T,
+): [T, (state: T | ((prev: T) => T)) => void] {
   const [state, setState] = useState<T>(init)
   const setPersistedState = useCallback(
-    (s: T) => {
-      setState(s)
-      Storage.set(key, s)
+    (s: T | ((prev: T) => T)) => {
+      setState((prev) => {
+        const next = typeof s === 'function' ? (s as any)(prev) : s
+        Storage.set(key, next)
+        return next
+      })
     },
     [key],
   )
@@ -21,7 +27,7 @@ export function usePersistedState<T>(key: string, init: T): [T, (state: T) => vo
   }, [key])
 
   if (!isBrowser()) {
-    return [init, () => {}]
+    return [init, () => { }]
   }
 
   return [state, setPersistedState]
