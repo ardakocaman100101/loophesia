@@ -1,6 +1,6 @@
 // TODO: handle when users don't have an AudioContext supporting browser
 import { getSynthStub, InstrumentName } from '@/features/synth'
-import { MidiStateEvent, Song, SongConfig, SongMeasure, SongNote } from '@/types'
+import { MidiStateEvent, Song, SongConfig, SongMeasure, SongNote, TrackSetting } from '@/types'
 import { getHands, round } from '@/utils'
 import { atom, Atom, getDefaultStore, PrimitiveAtom } from 'jotai'
 import midi from '../midi'
@@ -58,6 +58,7 @@ export class Player {
   score: Score = getInitialScore()
   song: PrimitiveAtom<Song | null> = atom<Song | null>(null)
   playInterval: any = null
+  trackConfigs: { [id: number]: TrackSetting } = {}
   currentSongTime = 0
   volume = atom(1)
 
@@ -219,6 +220,7 @@ export class Player {
     this.stop()
     this.resetMetronome()
     this.store.set(this.song, song)
+    this.trackConfigs = songConfig.tracks
     this.songHands = getHands(songConfig)
     this.store.set(this.state, 'CannotPlay')
 
@@ -263,18 +265,16 @@ export class Player {
   }
 
   isActiveHand(note: SongNote) {
-    const { left, right } = this.songHands
-
-    // Not even a L/R hand track.
-    if (left !== note.track && right !== note.track) {
+    const config = this.trackConfigs[note.track]
+    if (!config || !config.practice) {
       return false
     }
 
-    return (
-      this.hand === 'both' ||
-      (this.hand === 'left' && note.track === left) ||
-      (this.hand === 'right' && note.track === right)
-    )
+    if (this.hand === 'both') {
+      return true
+    }
+
+    return config.hand === this.hand
   }
 
   getTime() {

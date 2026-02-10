@@ -48,7 +48,7 @@ export function getHandSettings(config: SongConfig | undefined) {
     return {}
   }
   return mapValues(config.tracks, (trackSetting) => {
-    return { hand: trackSetting.hand }
+    return { hand: trackSetting.hand, practice: trackSetting.practice }
   })
 }
 
@@ -80,6 +80,7 @@ export function getDefaultSongSettings(song?: Song): SongConfig {
     return {
       track,
       hand: hand as any,
+      practice: hand !== 'none',
       count: song.notes.filter((n) => n.track === id).length,
       instrument: getInstrument(track),
       sound: true,
@@ -133,7 +134,7 @@ function getRange<T>(
   }
 
   let end = start + 1
-  for (; end < array.length && !endPred(array[end]); end++) {}
+  for (; end < array.length && !endPred(array[end]); end++) { }
 
   return array.slice(start, end)
 }
@@ -144,15 +145,24 @@ function isMatchingHand(item: CanvasItem, state: GivenState) {
     case 'measure':
       return state.visualization === 'falling-notes'
     case 'note':
-      const showLeft = hand === 'both' || hand === 'left'
-      if (showLeft && hands[item.track]?.hand === 'left') {
-        return true
+      const trackConfig = hands[item.track]
+      if (!trackConfig) return false
+
+      // If the track is set to practice, show it based on the current practice hand selection
+      if (trackConfig.practice) {
+        const isLeft = trackConfig.hand === 'left'
+        const isRight = trackConfig.hand === 'right'
+
+        if (hand === 'both') return true
+        if (hand === 'left' && isLeft) return true
+        if (hand === 'right' && isRight) return true
       }
-      const showRight = hand === 'both' || hand === 'right'
-      if (showRight && hands[item.track]?.hand === 'right') {
-        return true
-      }
-      return false
+
+      // If it's a background track (not for practice), only show it if it's not explicitly practicing a hand?
+      // Actually, standard behavior usually shows background tracks unless they are muted.
+      // But wait mode ONLY applies to practice tracks.
+      // Let's stick to the user's "individual track they can play" - which implies these tracks are visible for practice.
+      return trackConfig.practice
   }
 }
 

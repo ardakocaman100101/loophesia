@@ -149,6 +149,7 @@ export default function PlaySongPage() {
 
   useEffect(() => {
     if (!song) return
+    player.trackConfigs = songConfig.tracks
     Object.entries(songConfig.tracks).forEach(([id, settings]) => {
       player.setTrackVolume(Number(id), settings.sound ? 1 : 0)
     })
@@ -207,6 +208,22 @@ export default function PlaySongPage() {
           }
         })
         return { ...prev, tracks: newTracks }
+      })
+    },
+    [setSongConfig],
+  )
+
+  const handleTogglePractice = React.useCallback(
+    (trackId: number) => {
+      setSongConfig((prev) => {
+        const current = prev.tracks[trackId]
+        return {
+          ...prev,
+          tracks: {
+            ...prev.tracks,
+            [trackId]: { ...current, practice: !current.practice },
+          },
+        }
       })
     },
     [setSongConfig],
@@ -351,6 +368,7 @@ export default function PlaySongPage() {
                 config={songConfig}
                 onToggleMute={handleToggleMute}
                 onSolo={handleSolo}
+                onTogglePractice={handleTogglePractice}
               />
             )}
             <div className="relative min-w-full">

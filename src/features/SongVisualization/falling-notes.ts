@@ -98,7 +98,9 @@ function deriveState(state: GivenState): State {
     }
   }
 
-  const { startNote, endNote } = getSongRange({ notes }, minNotes)
+  const { startNote: songStart, endNote: songEnd } = getSongRange({ notes }, minNotes)
+  const startNote = midiState.detectedRange?.start ?? songStart
+  const endNote = midiState.detectedRange?.end ?? songEnd
   const pianoMeasurements = getPianoRollMeasurements(state.windowWidth, { startNote, endNote })
   const { whiteHeight } = pianoMeasurements
   const pianoTopY = state.height - whiteHeight - 5

@@ -1,4 +1,4 @@
-import { Volume2, VolumeX } from 'lucide-react'
+import { Volume2, VolumeX, Target } from 'lucide-react'
 import { Song, SongConfig } from '@/types'
 import { formatInstrumentName } from '@/utils'
 import clsx from 'clsx'
@@ -9,9 +9,10 @@ type TrackHUDProps = {
     config: SongConfig
     onToggleMute: (trackId: number) => void
     onSolo: (trackId: number) => void
+    onTogglePractice: (trackId: number) => void
 }
 
-export default function TrackHUD({ song, config, onToggleMute, onSolo }: TrackHUDProps) {
+export default function TrackHUD({ song, config, onToggleMute, onSolo, onTogglePractice }: TrackHUDProps) {
     const tracks = Object.entries(song.tracks).filter(([_, t]) =>
         song.notes.some(n => n.track === Number(_))
     )
@@ -47,6 +48,16 @@ export default function TrackHUD({ song, config, onToggleMute, onSolo }: TrackHU
                                     className="px-1.5 py-0.5 text-[9px] font-bold text-black bg-white/80 rounded hover:bg-white transition"
                                 >
                                     SOLO
+                                </button>
+                                <button
+                                    onClick={() => onTogglePractice(id)}
+                                    className={clsx(
+                                        "p-1 rounded transition",
+                                        settings?.practice ? "text-purple-400 bg-purple-500/20" : "text-white/30 hover:text-white"
+                                    )}
+                                    title="Practice this track"
+                                >
+                                    <Target size={14} />
                                 </button>
                                 <button
                                     onClick={() => onToggleMute(id)}

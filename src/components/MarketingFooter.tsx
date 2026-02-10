@@ -32,12 +32,12 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
 
 export function MarketingFooter() {
   return (
-    <footer className="border-t border-gray-100 bg-gray-50/50 py-12 dark:border-gray-800 dark:bg-black/50">
+    <footer className="bg-black py-12 dark:bg-black">
       <div className="mx-auto max-w-(--breakpoint-lg) px-6">
 
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <span className="text-gray-400 text-xs">
-            © {new Date().getFullYear()} Loophesia. All rights reserved.
+            loophesia by Arda
           </span>
         </div>
       </div>

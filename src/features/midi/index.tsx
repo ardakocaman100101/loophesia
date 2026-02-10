@@ -46,6 +46,7 @@ export function enableInputMidiDevice(device: MIDIInput) {
   device.open()
   device.addEventListener('midimessage', onMidiMessage)
   enabledInputDevices.set(device.id, device)
+  midiState.updateDetectedRange()
 }
 export function enableOutputMidiDevice(device: MIDIOutput) {
   device.open()
@@ -60,6 +61,7 @@ export function disableInputMidiDevice(deviceParam: MIDIInput) {
   device.removeEventListener('midimessage', onMidiMessage as any)
   device.close()
   enabledInputDevices.delete(device.id)
+  midiState.updateDetectedRange()
 }
 
 export function disableOutputMidiDevice(deviceParam: MIDIOutput) {
@@ -85,6 +87,7 @@ async function setupMidiDeviceListeners() {
     }
     enableInputMidiDevice(device)
   }
+  midiState.updateDetectedRange()
 }
 
 export type MidiEvent = {
@@ -158,6 +161,36 @@ class MidiState {
   pressedNotes = new Map<number, { time: number; vel: number }>()
   keyPressedNotes = new Set<number>()
   listeners: Array<Function> = []
+  detectedRange: { start: number; end: number } | null = null
+
+  updateDetectedRange() {
+    let min = 21
+    let max = 108
+    let found = false
+
+    enabledInputDevices.forEach((device) => {
+      const name = device.name?.toLowerCase() || ''
+      if (name.includes('minilab') || name.includes('25')) {
+        min = 48 // C3
+        max = 72 // C5
+        found = true
+      } else if (name.includes('49')) {
+        min = 36 // C2
+        max = 84 // C6
+        found = true
+      } else if (name.includes('61')) {
+        min = 36 // C2
+        max = 96 // C7
+        found = true
+      } else if (name.includes('88') || name.includes('piano')) {
+        min = 21 // A0
+        max = 108 // C8
+        found = true
+      }
+    })
+
+    this.detectedRange = found ? { start: min, end: max } : null
+  }
 
   handleKeyDown(e: KeyboardEvent) {
     let { key, code, metaKey, ctrlKey, altKey } = e

@@ -102,6 +102,7 @@ export type SongConfig = {
 export type TrackSetting = {
   track: Track
   hand: 'left' | 'right' | 'none'
+  practice: boolean
   sound: boolean
   instrument: InstrumentName
 }
@@ -118,5 +119,6 @@ export type MidiStateEvent = {
 export type HandSettings = {
   [trackId: string]: {
     hand: Hand | 'none'
+    practice: boolean
   }
 }
