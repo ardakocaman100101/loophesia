@@ -7,9 +7,9 @@ export default function Logo(props: LucideProps) {
     <div className="overflow-hidden flex items-center justify-center p-0" style={{ width, height }}>
       <img
         src="/images/logo-eye.jpg"
-        width={width ?? 54}
-        height={height ?? 54}
-        className={cn(className, 'dark:invert object-contain')}
+        width={width ?? 192}
+        height={height ?? 192}
+        className={cn(className, 'object-contain')}
         style={{ ...style, imageRendering: 'auto' }}
         alt="Loophesia Logo"
       />
