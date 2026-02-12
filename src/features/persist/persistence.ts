@@ -1,4 +1,4 @@
-import type { Song, SongConfig, SongMetadata } from '@/types'
+import type { Bpm, Song, SongConfig, SongMeasure, SongMetadata, SongNote, Tracks } from '@/types'
 import * as idb from 'idb-keyval'
 import * as jotai from 'jotai'
 import { parseMidi } from '../parsers'
@@ -92,27 +92,126 @@ export async function addFolder(): Promise<void> {
   }
 }
 
-export async function addUploadedSong(file: File): Promise<string> {
-  const buffer = await file.arrayBuffer()
-  const bytes = new Uint8Array(buffer)
-  const duration = parseMidi(bytes).duration
+export async function addUploadedSongs(files: File[]): Promise<string> {
+  // Sort files and parse them
+  const parsedSongs = await Promise.all(
+    files.map(async (file) => {
+      const buffer = await file.arrayBuffer()
+      const bytes = new Uint8Array(buffer)
+      return { file, song: parseMidi(bytes) }
+    }),
+  )
+
+  // Rank by earliest note time
+  parsedSongs.sort((a, b) => {
+    const firstNoteA = Math.min(...a.song.notes.map((n) => n.time)) || 0
+    const firstNoteB = Math.min(...b.song.notes.map((n) => n.time)) || 0
+    return firstNoteA - firstNoteB
+  })
+
+  // Determine if it's a multi-file learning case
+  const isMultiFile = files.length > 1
   const id = crypto.randomUUID()
+
+  // For a single file, we behave as before.
+  // For multiple files, we "merge" them into a sequential progressive song.
+  // We'll flatten them but keep track of original file boundaries via track IDs.
+  let mergedDuration = 0
+  const mergedNotes: SongNote[] = []
+  const mergedTracks: Tracks = {}
+  const mergedMeasures: SongMeasure[] = []
+  const mergedBpms: Bpm[] = []
+
+  let trackOffset = 0
+  let measureOffset = 0
+  let timeOffset = 0 // In sequential mode, we might want them one after another, 
+  // but the prompt says: "X should be played before Y" and "when X is finished, bring Y's notes".
+  // This implies they might overlapping in absolute MIDI time but we treat them sequentially.
+  // Actually, if we want them sequential, we should offset their 'time' property.
+
+  parsedSongs.forEach(({ file, song }, index) => {
+    // Re-index tracks
+    const trackMapping: { [old: number]: number } = {}
+    Object.keys(song.tracks).forEach((oldIdStr) => {
+      const oldId = parseInt(oldIdStr)
+      const newId = trackOffset++
+      trackMapping[oldId] = newId
+      mergedTracks[newId] = song.tracks[oldIdStr]
+      // Tag tracks with metadata if needed
+      mergedTracks[newId].name = `${song.tracks[oldIdStr].name || 'Track'} (${file.name})`
+    })
+
+    // Flatten notes with time offset?
+    // User says: "when X is finished, you should bring Y's notes".
+    // This sounds like we should concatenate them in time.
+    song.notes.forEach((note) => {
+      mergedNotes.push({
+        ...note,
+        track: trackMapping[note.track],
+        time: note.time + timeOffset,
+        measure: note.measure + measureOffset,
+      })
+    })
+
+    song.measures.forEach((measure) => {
+      mergedMeasures.push({
+        ...measure,
+        time: measure.time + timeOffset,
+        number: measure.number + measureOffset,
+      })
+    })
+
+    song.bpms.forEach((bpm) => {
+      mergedBpms.push({
+        ...bpm,
+        time: bpm.time + timeOffset,
+      })
+    })
+
+    timeOffset += song.duration
+    measureOffset += song.measures.length
+    mergedDuration += song.duration
+  })
+
   const metadata: SongMetadata = {
     id,
-    title: file.name.replace(/\.(mid|midi)$/i, ''),
+    title: isMultiFile ? `Progressive: ${files[0].name.replace(/\.[^/.]+$/, '')}` : files[0].name.replace(/\.[^/.]+$/, ''),
     file: id,
     source: 'upload',
     difficulty: 0,
-    duration,
+    duration: mergedDuration,
   }
+
+  // We need to store this merged "Song" object in Storage because it's non-standard
+  // persistence.ts currently relies on re-parsing the file in getUploadedSong (not shown but inferred)
+  // Actually addUploadedSong stores the File in uploadedFilesAtom.
+  // If we merge, we might want to store the merged Song in Storage.
+
+  // Create a synthetic "Merged Song" byte array? (Hard)
+  // Or just store the JSON result? (Easier)
+  // persistence.ts doesn't seem to have a `getSong` function, it's in the player probably.
 
   const currentUploaded = store.get(uploadedSongsAtom)
   store.set(uploadedSongsAtom, [...currentUploaded, metadata])
 
+  // Store the FIRST file as the primary handle for consistency if needed, 
+  // but we'll manually store the merged song in Storage.
   const currentFiles = store.get(uploadedFilesAtom)
   const newFiles = new Map(currentFiles)
-  newFiles.set(id, file)
+  newFiles.set(id, files[0]) // Just for ID reference
   store.set(uploadedFilesAtom, newFiles)
+
+  // Store the pre-parsed merged song so the player can just load it.
+  Storage.set(id, {
+    tracks: mergedTracks,
+    duration: mergedDuration,
+    notes: mergedNotes,
+    measures: mergedMeasures,
+    bpms: mergedBpms,
+    ppq: parsedSongs[0].song.ppq,
+    timeSignature: parsedSongs[0].song.timeSignature,
+    keySignature: parsedSongs[0].song.keySignature,
+  })
 
   return id
 }

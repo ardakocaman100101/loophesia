@@ -39,7 +39,7 @@ export default function TrackHUD({ song, config, onToggleMute, onSolo, onToggleP
                         )}
                     >
                         <div className="flex items-center justify-between">
-                            <span className="truncate text-xs font-medium text-white max-w-[100px]">
+                            <span className="truncate text-xs font-bold text-white max-w-[100px]" title={track.name}>
                                 {track.name || formatInstrumentName(settings?.instrument || track.instrument)}
                             </span>
                             <div className="flex gap-1">

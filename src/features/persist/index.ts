@@ -8,6 +8,6 @@ export {
   localSongsAtom,
   uploadedSongsAtom,
   uploadedFilesAtom,
-  addUploadedSong,
+  addUploadedSongs,
   getUploadedFile,
 } from './persistence'

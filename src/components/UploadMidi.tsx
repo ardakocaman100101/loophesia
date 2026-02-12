@@ -1,4 +1,4 @@
-import { addUploadedSong } from '@/features/persist/persistence'
+import { addUploadedSongs } from '@/features/persist/persistence'
 import { Upload } from 'lucide-react'
 import { useRef, useState } from 'react'
 
@@ -13,18 +13,18 @@ export function UploadMidi({
     const [isUploading, setIsUploading] = useState(false)
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (!file) return
+        const selectedFiles = Array.from(e.target.files || [])
+        if (selectedFiles.length === 0) return
 
         try {
             setIsUploading(true)
-            const id = await addUploadedSong(file)
+            const id = await addUploadedSongs(selectedFiles)
             if (onUpload) {
                 onUpload(id)
             }
         } catch (error) {
             console.error('Failed to upload MIDI:', error)
-            alert('Failed to upload MIDI file')
+            alert('Failed to upload MIDI files')
         } finally {
             setIsUploading(false)
             if (inputRef.current) {
@@ -38,6 +38,10 @@ export function UploadMidi({
             <input
                 type="file"
                 accept=".mid,.midi,audio/midi,audio/x-midi"
+                multiple
+                // @ts-expect-error - webkitdirectory is not a standard React attribute but works in browsers
+                webkitdirectory=""
+                directory=""
                 ref={inputRef}
                 className="hidden"
                 onChange={handleFileChange}

@@ -163,7 +163,20 @@ export default function PlaySongPage() {
     const config = getSongSettings(id, song)
     setSongConfig(config)
     player.setSong(song, config)
-  }, [song, setSongConfig, id, player])
+
+    // Auto-enable progressive learning if the song title indicates it
+    if (songMeta?.title?.startsWith('Progressive:')) {
+      player.store.set(player.progressiveMode, true)
+      player.store.set(player.completedTracks, new Set<number>())
+
+      const tracks = Object.keys(song.tracks).map(Number).sort((a, b) => a - b)
+      if (tracks.length > 0) {
+        player.setupProgressiveRegion_(tracks[0])
+      }
+    } else {
+      player.store.set(player.progressiveMode, false)
+    }
+  }, [song, setSongConfig, id, player, songMeta?.title])
 
   useEventListener<KeyboardEvent>('keydown', (evt: KeyboardEvent) => {
     if (evt.code === 'Space') {

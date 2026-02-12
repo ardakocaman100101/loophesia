@@ -17,17 +17,15 @@ export default function AppBar() {
   return (
     <nav
       className={clsx(
-        'sticky top-0 z-50 flex h-48 w-full flex-col justify-center transition-all duration-300',
-        scrolled
-          ? 'bg-white/95 backdrop-blur-md border-b border-gray-100 dark:bg-black/95 dark:border-gray-800'
-          : 'bg-transparent',
+        'sticky top-0 z-50 flex h-48 w-full flex-col justify-center transition-all duration-300 bg-white',
+        scrolled && 'backdrop-blur-md border-b border-gray-100',
       )}
     >
       <div className="relative mx-auto flex w-full max-w-(--breakpoint-lg) items-center justify-between px-6">
         <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-24">
           <Link
             to={'/'}
-            className="flex items-center gap-24 text-gray-900 transition hover:opacity-80 dark:text-white"
+            className="flex items-center gap-24 text-gray-900 transition hover:opacity-80"
           >
             <Logo height={192} width={192} className="h-32 w-32 sm:h-44 sm:w-44" />
             <span className="text-6xl font-bold tracking-tighter sm:text-7xl">loophesia</span>
@@ -44,7 +42,7 @@ export default function AppBar() {
             href="https://github.com/ardakocaman100101/loophesia"
             target="_blank"
             rel="noreferrer"
-            className="text-gray-500 transition hover:text-gray-900 dark:hover:text-white"
+            className="text-gray-500 transition hover:text-gray-900"
           >
             <Github size={20} />
           </a>
