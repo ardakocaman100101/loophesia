@@ -98,7 +98,7 @@ export default function FreePlay() {
             song={freePlayer.song}
             config={{ visualization: 'falling-notes', noteLabels: 'none' } as SongConfig}
             hand="both"
-            handSettings={{ 1: { hand: 'right' } }}
+            handSettings={{ 1: { hand: 'right', practice: false } }}
             getTime={() => freePlayer.getTime()}
             constrictView={false}
           />

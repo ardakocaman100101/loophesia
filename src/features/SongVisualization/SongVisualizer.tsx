@@ -1,19 +1,12 @@
 import { Canvas } from '@/components'
 import * as touchscroll from '@/features/SongVisualization/touchscroll'
 import { useSize } from '@/hooks'
-import { Hand, Song, SongConfig } from '@/types'
+import { Hand, HandSettings, Song, SongConfig } from '@/types'
 import { LegacyRef, useEffect, useMemo, useRef } from 'react'
 import { usePlayer } from '../player'
 import { GivenState, render } from './canvas-renderer'
 import { waitForImages } from './images'
 import { PIXELS_PER_SECOND as pps } from './utils'
-
-type HandSettings = {
-  [trackId: string]: {
-    hand: Hand | 'none'
-  }
-}
-
 type CanvasRendererProps = {
   song: Song | undefined
   config: SongConfig

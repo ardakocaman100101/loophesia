@@ -40,7 +40,7 @@ function decay(player: Player) {
 
 let wasPlaying = false
 export function handleDown(player: Player, e: PointerEvent) {
-  if (intersectsWithPiano(e.clientY)) {
+  if (intersectsWithPiano(e.clientX)) {
     isDragging_ = false
     return
   }
@@ -75,13 +75,13 @@ export function handleMove(player: Player, e: PointerEvent) {
   if (!isDragging_) {
     return
   }
-  const yVel = getPointerVelocity().y
-  seekSeconds(player, yVel / pps)
+  const xVel = getPointerVelocity().x
+  seekSeconds(player, -xVel / pps)
 
   //  Threshold to prevent accidental flings
   const threshold = 5
-  if (Math.abs(yVel) > threshold) {
-    acceleration = yVel
+  if (Math.abs(xVel) > threshold) {
+    acceleration = xVel
   } else {
     acceleration = 0
   }

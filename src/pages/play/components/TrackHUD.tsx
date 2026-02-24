@@ -20,7 +20,7 @@ export default function TrackHUD({ song, config, onToggleMute, onSolo, onToggleP
     if (tracks.length <= 1) return null
 
     return (
-        <div className="fixed left-4 top-24 z-20 flex flex-col gap-2 rounded-xl bg-black/40 p-3 backdrop-blur-md border border-white/10 max-h-[60vh] overflow-y-auto w-48 shadow-2xl">
+        <div className="fixed right-4 top-24 z-20 flex flex-col gap-2 rounded-xl bg-black/40 p-3 backdrop-blur-md border border-white/10 max-h-[60vh] overflow-y-auto w-48 shadow-2xl">
             <div className="mb-2 px-1 text-[10px] font-bold uppercase tracking-wider text-white/50">
                 Instruments
             </div>
